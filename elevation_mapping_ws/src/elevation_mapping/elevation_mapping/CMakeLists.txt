@@ -93,7 +93,13 @@ add_executable(${PROJECT_NAME}
   src/elevation_mapping_node.cpp
 )
 
+add_executable(landing_site_search src/LandingSiteSearch.cpp)
+
 target_link_libraries(${PROJECT_NAME}
+  ${PROJECT_NAME}_library
+)
+
+target_link_libraries(landing_site_search
   ${PROJECT_NAME}_library
 )
 
