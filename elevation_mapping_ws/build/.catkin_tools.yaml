@@ -1,6 +1,0 @@
-devel_space: /home/chun/Desktop/uav_autonomous_landing/elevation_mapping_ws/devel
-install: false
-install_space: /home/chun/Desktop/uav_autonomous_landing/elevation_mapping_ws/install
-profile: default
-source_space: /home/chun/Desktop/uav_autonomous_landing/elevation_mapping_ws/src
-workspace: /home/chun/Desktop/uav_autonomous_landing/elevation_mapping_ws

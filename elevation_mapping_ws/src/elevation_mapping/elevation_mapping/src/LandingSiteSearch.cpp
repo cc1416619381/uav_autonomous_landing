@@ -1,12 +1,15 @@
 #include <ros/ros.h>
 #include "elevation_mapping/ElevationMapping.hpp"
+#include <std_msgs/String.h>
 #include <iostream>
+#include <sstream>
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "landing_site_search");
     ros::NodeHandle n;
     ros::ServiceClient client = n.serviceClient<grid_map_msgs::GetGridMap>("/elevation_mapping/get_submap");
-    
+    ros::Publisher position_pub = n.advertise<std_msgs::String>("landing_site_search_point", 1000);
+
     grid_map_msgs::GetGridMap srv;
     srv.request.frame_id = "body";
     srv.request.layers = {"elevation"};
@@ -50,11 +53,24 @@ int main(int argc, char **argv) {
             }
         }
         std::cout << map2d.size() << " " << map2d[0].size() << std::endl;
-
         
     } else {
         ROS_ERROR("FAILED!");
         return 1;
     }
+
+    ros::Rate loop_rate(1);
+    while (ros::ok())
+    {
+        std_msgs::String msg;
+        std::stringstream ss;
+        ss << "1,0";
+        msg.data = ss.str();
+        ROS_INFO("position (%s) has been published.", msg.data.c_str());
+        position_pub.publish(msg);
+        ros::spinOnce();
+        loop_rate.sleep();
+    }
+
     return 0;
 }

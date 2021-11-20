@@ -1,8 +1,0 @@
-prefix=/home/chun/Desktop/uav_autonomous_landing/elevation_mapping_ws/devel/.private/kindr_rviz_plugins
-
-Name: kindr_rviz_plugins
-Description: Description of kindr_rviz_plugins
-Version: 0.3.1
-Cflags: -I/home/chun/Desktop/uav_autonomous_landing/elevation_mapping_ws/src/kindr_ros/kindr_rviz_plugins/include
-Libs: -L${prefix}/lib -lkindr_rviz_plugins
-Requires: rviz kindr_msgs

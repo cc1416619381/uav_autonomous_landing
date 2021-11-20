@@ -1,5 +1,0 @@
-kindr_ros/kindr_ros
-/home/chun/Desktop/uav_autonomous_landing/elevation_mapping_ws/devel/.private/kindr_ros/cmake.lock /home/chun/Desktop/uav_autonomous_landing/elevation_mapping_ws/devel/./cmake.lock
-/home/chun/Desktop/uav_autonomous_landing/elevation_mapping_ws/devel/.private/kindr_ros/share/kindr_ros/cmake/kindr_rosConfig.cmake /home/chun/Desktop/uav_autonomous_landing/elevation_mapping_ws/devel/share/kindr_ros/cmake/kindr_rosConfig.cmake
-/home/chun/Desktop/uav_autonomous_landing/elevation_mapping_ws/devel/.private/kindr_ros/share/kindr_ros/cmake/kindr_rosConfig-version.cmake /home/chun/Desktop/uav_autonomous_landing/elevation_mapping_ws/devel/share/kindr_ros/cmake/kindr_rosConfig-version.cmake
-/home/chun/Desktop/uav_autonomous_landing/elevation_mapping_ws/devel/.private/kindr_ros/lib/pkgconfig/kindr_ros.pc /home/chun/Desktop/uav_autonomous_landing/elevation_mapping_ws/devel/lib/pkgconfig/kindr_ros.pc
