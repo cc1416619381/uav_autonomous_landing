@@ -2,7 +2,65 @@
 #include "elevation_mapping/ElevationMapping.hpp"
 #include <std_msgs/String.h>
 #include <iostream>
+#include <vector>
 #include <sstream>
+
+void init_srv(grid_map_msgs::GetGridMap& srv) {
+    srv.request.frame_id = "body";
+    srv.request.layers = {"elevation"};
+    srv.request.position_x = 0;
+    srv.request.position_y = 0;
+    srv.request.length_x = 15;
+    srv.request.length_y = 15;
+}
+
+void get_submap_from_srv(ros::ServiceClient& client, grid_map_msgs::GetGridMap& srv, std::vector<std::vector<float>>& map2d) {
+    if (client.call(srv)) {
+        ROS_INFO("CALL GET_SUBMAP SRV SUCCESS!");
+        grid_map_msgs::GridMap grid_map = srv.response.map;
+        
+        // map is the data in elevation layer of grid_map, each element corresponding the height of the grid
+        // ROS_INFO("print:%d", grid_map.data[0].data.size());
+        std::vector<float> map = grid_map.data[0].data;
+        int map_size = map.size();
+
+        // get row_index and column_index
+        int cols = grid_map.data[0].layout.dim[0].size;
+        int rows = grid_map.data[0].layout.dim[1].size;
+        
+        // convert nan value to -100
+        for (int i = 0; i < map_size; i++) {
+            if (map[i] > -100 && map[i] < 100) {
+                // pass
+            } else {
+                map[i] = -100; 
+            } 
+        }
+
+        // construct map2d from 1d representation
+        int k = 0;
+        std::vector<float> tmp;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                tmp.push_back(map[k]);
+                if (j == cols - 1) {
+                    map2d.push_back(tmp);
+                    tmp.clear();
+                }
+                k++;
+            }
+        }
+        ROS_INFO("obtain sub_map with size: %d * %d", map2d.size(), map2d[0].size());
+    } else {
+        ROS_ERROR("CALL GET_SUBMAP SRV FAILED!");
+        return;
+    }
+}
+
+// std::stringstream find_landing_site(std::vector<std::vector<float>>& map2d) {
+//     std::stringstream landing_site;
+
+// }
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "landing_site_search");
@@ -11,62 +69,21 @@ int main(int argc, char **argv) {
     ros::Publisher position_pub = n.advertise<std_msgs::String>("landing_site_search_point", 1000);
 
     grid_map_msgs::GetGridMap srv;
-    srv.request.frame_id = "body";
-    srv.request.layers = {"elevation"};
-    srv.request.position_x = 0;
-    srv.request.position_y = 0;
-    srv.request.length_x = 15;
-    srv.request.length_y = 15;
+    init_srv(srv);
+    ROS_INFO("INIT SRV SUCCESS!");
 
-    if (client.call(srv))
-    {
-        ROS_INFO("SUCCESS!");
-        grid_map_msgs::GridMap grid_map = srv.response.map;
-
-        // map为grid_map中的elevation层数据，每个元素存储对应单元格的高度值，坐标系为机体坐标系
-        // ROS_INFO("print:%d", grid_map.data[0].data.size());
-        std::vector<float> map = grid_map.data[0].data;
-        int map_size = map.size();
-
-        // column_index
-        int cols = grid_map.data[0].layout.dim[0].size;
-
-        // row_index
-        int rows = grid_map.data[0].layout.dim[1].size;
-        
-        // 解决map中的nan值
-        for (int i = 0; i < map_size; i++) {
-            if (map[i] > -100 && map[i] < 100) {
-                // pass
-            } else {
-                map[i] = -100;
-            } 
-        }
-
-        // 由map构造2d map
-        int k = 0;
-        std::vector<std::vector<float>> map2d(cols, std::vector<float>(rows, 0));
-        for (int i = 0; i < cols; i++) {
-            for (int j = 0; j < rows; j++) {
-                map2d[i][j] = map[k];
-                k++;
-            }
-        }
-        std::cout << map2d.size() << " " << map2d[0].size() << std::endl;
-        
-    } else {
-        ROS_ERROR("FAILED!");
-        return 1;
-    }
+    std::vector<std::vector<float>> map2d;
+    get_submap_from_srv(client, srv, map2d);
+    ROS_INFO("GET_SUBMAP_FROM_SRV SUCCESS!");
 
     ros::Rate loop_rate(1);
-    while (ros::ok())
-    {
+    while (ros::ok()) {
         std_msgs::String msg;
+        // std::stringstream ss = find_landing_site(map2d);
         std::stringstream ss;
         ss << "1,0";
         msg.data = ss.str();
-        ROS_INFO("position (%s) has been published.", msg.data.c_str());
+        // ROS_INFO("position (%s) is published.", msg.data.c_str());
         position_pub.publish(msg);
         ros::spinOnce();
         loop_rate.sleep();

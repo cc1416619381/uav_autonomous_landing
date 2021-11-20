@@ -5,7 +5,7 @@ from mavros_msgs.srv import CommandBool, CommandTOL, SetMode
 from geometry_msgs.msg import PoseStamped, Twist
 from sensor_msgs.msg import Imu, NavSatFix
 from std_msgs.msg import Float32, String
-from pyquaternion import Quaternion
+# from pyquaternion import Quaternion
 import time
 import math
 
