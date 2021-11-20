@@ -57,10 +57,11 @@ void get_submap_from_srv(ros::ServiceClient& client, grid_map_msgs::GetGridMap& 
     }
 }
 
-// std::stringstream find_landing_site(std::vector<std::vector<float>>& map2d) {
-//     std::stringstream landing_site;
+std::stringstream find_landing_site(const std::vector<std::vector<float>>& map2d) {
+    std::stringstream landing_site;
 
-// }
+    return landing_site;
+}
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "landing_site_search");
@@ -83,7 +84,7 @@ int main(int argc, char **argv) {
         std::stringstream ss;
         ss << "1,0";
         msg.data = ss.str();
-        // ROS_INFO("position (%s) is published.", msg.data.c_str());
+        ROS_INFO("position (%s) is published.", msg.data.c_str());
         position_pub.publish(msg);
         ros::spinOnce();
         loop_rate.sleep();
