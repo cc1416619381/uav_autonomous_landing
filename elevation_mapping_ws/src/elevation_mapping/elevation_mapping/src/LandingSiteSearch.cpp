@@ -4,6 +4,12 @@
 #include <iostream>
 #include <vector>
 #include <sstream>
+#include <cmath>
+
+// define the expect size with EXPECT_SIZE
+#define EXPECT_SIZE 4 
+// the height difference is considered flat within the HEIGHT_ALLOWANCE
+#define HEIGHT_ALLOWANCE 0.4
 
 void init_srv(grid_map_msgs::GetGridMap& srv) {
     srv.request.frame_id = "body";
@@ -57,9 +63,56 @@ void get_submap_from_srv(ros::ServiceClient& client, grid_map_msgs::GetGridMap& 
     }
 }
 
+float get_flatness_cost(int i, int j, int expect_size, const std::vector<std::vector<float>>& map2d) {
+    int central_x = i + (expect_size - 1) / 2;
+    int central_y = j + (expect_size - 1) / 2;
+    float central_h = map2d[central_x][central_y];
+    float height_diff;
+    float flatness_cost = 0;            
+    for (int row = i; row < i + expect_size; row++) {
+        for (int col = j; col < j + expect_size; col++) {
+            height_diff = map2d[row][col] - central_h;
+            if (fabs(height_diff) > HEIGHT_ALLOWANCE) {
+                return -1;
+            } else {
+                flatness_cost += height_diff * height_diff;
+            }
+        }
+    }
+    return flatness_cost;
+}
+
 std::stringstream find_landing_site(const std::vector<std::vector<float>>& map2d) {
     std::stringstream landing_site;
+    // convert to the size in cell with the resolution 0.2m/cell
+    int expect_size = EXPECT_SIZE * 5;
+    int rows = map2d.size();
+    int cols = map2d[0].size();
+    if (expect_size > rows || expect_size > cols) {
+        ROS_ERROR("EXPECT SIZE IS LARGER THAN THE SUBMAP SIZE!");
+    }
+    float min_flatness_cost = expect_size * expect_size * 100;
+    float flatness_cost;
+    int landing_site_x = (rows - 1) / 2;
+    int landing_site_y = (cols - 1) / 2;
+    bool landing_trigger = false;
+    for (int i = 0; i < rows - expect_size + 1; i++) {
+        for (int j = 0; j < cols - expect_size + 1; j++) {
+            flatness_cost = get_flatness_cost(i, j, expect_size, map2d);
+            if (fabs(flatness_cost - -1) < 0.01) {
+                // ROS_INFO("LANDING NOT TRIGGER!");
+                continue;
+            } else if (flatness_cost < min_flatness_cost) {
+                landing_trigger = true;
+                ROS_INFO("LANDING TRIGGER!");
+                min_flatness_cost = flatness_cost;
+                landing_site_x = i + (expect_size - 1) / 2;
+                landing_site_y = j + (expect_size - 1) / 2;
+            }
+        }
+    }
 
+    landing_site << landing_site_x << ',' << landing_site_y;
     return landing_site;
 }
 
@@ -74,15 +127,15 @@ int main(int argc, char **argv) {
     ROS_INFO("INIT SRV SUCCESS!");
 
     std::vector<std::vector<float>> map2d;
-    get_submap_from_srv(client, srv, map2d);
-    ROS_INFO("GET_SUBMAP_FROM_SRV SUCCESS!");
-
     ros::Rate loop_rate(1);
     while (ros::ok()) {
+        get_submap_from_srv(client, srv, map2d);
+        ROS_INFO("GET_SUBMAP_FROM_SRV SUCCESS!");
+
         std_msgs::String msg;
-        // std::stringstream ss = find_landing_site(map2d);
-        std::stringstream ss;
-        ss << "1,0";
+        std::stringstream ss = find_landing_site(map2d);
+        // std::stringstream ss;
+        // ss << "1,0";
         msg.data = ss.str();
         ROS_INFO("position (%s) is published.", msg.data.c_str());
         position_pub.publish(msg);

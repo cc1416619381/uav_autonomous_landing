@@ -6,7 +6,7 @@
         "limitSymbolsToIncludedHeaders": true
       },
       "includePath": [
-        "/home/chun/Desktop/elevation_mapping_ws/devel/include/**",
+        "/home/chun/Desktop/uav_autonomous_landing/elevation_mapping_ws/devel/include/**",
         "/home/chun/Desktop/kindr_ros_ws/devel/include/**",
         "/home/chun/Desktop/imu_tools_ws/devel/include/**",
         "/home/chun/Desktop/catkin_ws/devel/include/**",
