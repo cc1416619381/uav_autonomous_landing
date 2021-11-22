@@ -12,7 +12,7 @@ import math
 
 class Commander:
     def __init__(self):
-        rospy.init_node("commander_node")
+        rospy.init_node("commander_node", anonymous=True)
         rate = rospy.Rate(20)
         self.position_target_pub = rospy.Publisher('gi/set_pose/position', PoseStamped, queue_size=10)
         self.yaw_target_pub = rospy.Publisher('gi/set_pose/orientation', Float32, queue_size=10)
@@ -64,14 +64,14 @@ def command_callback(data, con):
     position2d = data.data.split(",")
     position_x = position2d[0]
     position_y = position2d[1]
-
     # now position_x = x, position_y = y, but is char type
     # print(position_x)
     # print(position_y)
 
     # con.move() need float args
     con.move(float(position_x), float(position_y), 0)
-    time.sleep(10)
+    time.sleep(3)
+    con.land()
 
 def listener(con):
     rospy.Subscriber("landing_site_search_point", String, command_callback, con)

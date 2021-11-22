@@ -82,8 +82,7 @@ float get_flatness_cost(int i, int j, int expect_size, const std::vector<std::ve
     return flatness_cost;
 }
 
-std::stringstream find_landing_site(const std::vector<std::vector<float>>& map2d) {
-    std::stringstream landing_site;
+bool find_landing_site(const std::vector<std::vector<float>>& map2d, std::stringstream& landing_site) {
     // convert to the size in cell with the resolution 0.2m/cell
     int expect_size = EXPECT_SIZE * 5;
     int rows = map2d.size();
@@ -104,16 +103,23 @@ std::stringstream find_landing_site(const std::vector<std::vector<float>>& map2d
                 continue;
             } else if (flatness_cost < min_flatness_cost) {
                 landing_trigger = true;
-                ROS_INFO("LANDING TRIGGER!");
                 min_flatness_cost = flatness_cost;
                 landing_site_x = i + (expect_size - 1) / 2;
                 landing_site_y = j + (expect_size - 1) / 2;
             }
         }
     }
-
-    landing_site << landing_site_x << ',' << landing_site_y;
-    return landing_site;
+    if (landing_trigger == true) {
+        ROS_INFO("LANDING TRIGGER!");
+        // transformation from submap frame to body frame
+        // R = [-1, 0; 0, -1]; t = [(rows - 1) / 2, (cols - 1) / 2]
+        float landing_site_x_in_m = (-landing_site_x + rows / 2) * 0.2;
+        float landing_site_y_in_m = (-landing_site_y + cols / 2) * 0.2;
+        landing_site << landing_site_y_in_m << ',' << landing_site_x_in_m;
+        return true;
+    } else {
+        return false;
+    }
 }
 
 int main(int argc, char **argv) {
@@ -130,16 +136,21 @@ int main(int argc, char **argv) {
     ros::Rate loop_rate(1);
     while (ros::ok()) {
         get_submap_from_srv(client, srv, map2d);
-        ROS_INFO("GET_SUBMAP_FROM_SRV SUCCESS!");
-
         std_msgs::String msg;
-        std::stringstream ss = find_landing_site(map2d);
+        std::stringstream landing_site;
+        bool landing_trigger;
+        landing_trigger = find_landing_site(map2d, landing_site);
         // std::stringstream ss;
         // ss << "1,0";
-        msg.data = ss.str();
-        ROS_INFO("position (%s) is published.", msg.data.c_str());
-        position_pub.publish(msg);
+        if (landing_trigger == true) {
+            msg.data = landing_site.str();
+            ROS_INFO("position (%s) is published.", msg.data.c_str());
+            position_pub.publish(msg);
+            break;
+        }
         ros::spinOnce();
+        std::cout << std::endl;
+        map2d.clear();
         loop_rate.sleep();
     }
 
